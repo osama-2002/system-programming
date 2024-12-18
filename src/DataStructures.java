@@ -1,3 +1,5 @@
+import javafx.util.Pair;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -5,11 +7,23 @@ public class DataStructures {
     static HashMap<String, String> operationTable = new HashMap<>();
     static HashMap<String, String> ASCIITable = new HashMap<>();
     static HashMap<String, Integer> symbolTable = new HashMap<>();
+    static HashMap<String, Pair<Integer, Integer>> nameTable = new HashMap<>();
+    static ArrayList<String> definitionTable = new ArrayList<>();
+    static String[] argumentTable;
     static void showSymbolTable() {
         for(Map.Entry<String, Integer> entry : symbolTable.entrySet()) {
             System.out.printf("%-10s", entry.getKey());
             System.out.println(Integer.toHexString(entry.getValue()).toUpperCase());
         }
+    }
+    static void showNameTable() {
+        for(Map.Entry<String, Pair<Integer, Integer>> entry : nameTable.entrySet()) {
+            System.out.printf("%-18s", entry.getKey());
+            System.out.println(entry.getValue().getKey() + " : " + entry.getValue().getValue());
+        }
+    }
+    static void showDefinitionTable() {
+        for(String line : definitionTable) System.out.println(line);
     }
     static {
         operationTable.put("ADD", "18");

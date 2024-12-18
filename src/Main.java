@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
-
 public class Main {
     public static void main(String[] args) {
         //Testing the assembler
@@ -13,9 +10,9 @@ public class Main {
 //        loader.passOne();
 //        loader.passTwo();
 //
-//        //Testing the macroProcessor
-//        MacroProcessor processor = new MacroProcessor("src/processor_input.txt");
-//        processor.process();
-
+        //Testing the macroProcessor
+        MacroProcessor processor = new MacroProcessor("src/processor_input.txt");
+        processor.process();
+        processor.showResult();
     }
 }

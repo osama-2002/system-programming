@@ -6,6 +6,11 @@ RDBUFF        MACRO             &INDEV,&BUFADR,&RECLTH
               CLEAR             X
               CLEAR             A
               CLEAR             S
+RESET         MACRO             &R1,&R2,&R3
+              CLEAR             &R1
+              CLEAR             &R2
+              CLEAR             &R3
+              MEND
               +LDT              #4096
               TD                =X'&INDEV'
               JEQ               *-3
@@ -47,4 +52,5 @@ THREE         WORD              3
 RETADR        RESW              1
 LENGTH        RESW              1
 BUFFER        RESB              4096
+              RESET             A,B,C
               END               FIRST

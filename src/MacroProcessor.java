@@ -15,6 +15,7 @@ public class MacroProcessor {
     String currentLine, macroName, opCode, label;
     String[] currentLineTokens;
     int firstIndex, lastIndex;
+    int definitionTableIndex;
 
     MacroProcessor(String fileName) {
         this.fileName = fileName;
@@ -45,7 +46,7 @@ public class MacroProcessor {
     }
 
     private void processLine() {
-        if(currentLine.startsWith(".")) return;
+        if(currentLine.startsWith(".") || currentLine.isEmpty()) return;
         if(currentLineTokens.length == 3) {
             opCode = currentLineTokens[1];
         } else {
@@ -54,7 +55,8 @@ public class MacroProcessor {
         if(DataStructures.nameTable.containsKey(opCode)) expand();
         else if(opCode.equals("MACRO")) define();
         else {
-            if(opCode.equals(currentLineTokens[0])) {
+            if(expanding) return;
+            if(opCode.equals(currentLineTokens[0]) && currentLineTokens.length > 1) {
                 currentLine = String.format("%-14s%-18s%-14s", "", currentLineTokens[0], currentLineTokens[1]);
             }
             expandedProgram.add(currentLine);
@@ -62,7 +64,12 @@ public class MacroProcessor {
     }
 
     private void getLine() {
-        currentLine = reader.nextLine().trim();
+        if(expanding) {
+            currentLine = DataStructures.definitionTable.get(definitionTableIndex);
+            definitionTableIndex++;
+        } else {
+            currentLine = reader.nextLine().trim();
+        }
         currentLineTokens = currentLine.split("\\s+");
     }
 
@@ -76,7 +83,7 @@ public class MacroProcessor {
         String argument = "";
         while(level > 0) {
             getLine();
-            if(currentLine.startsWith(".")) continue;
+            if(currentLine.startsWith(".") || currentLine.isEmpty()) continue;
             if(currentLineTokens.length == 3) {
                 opCode = currentLineTokens[1];
                 argument = currentLineTokens[2];
@@ -128,15 +135,17 @@ public class MacroProcessor {
         expanding = true;
         DataStructures.argumentTable = argument.split(",");
         Pair<Integer, Integer> indexes = DataStructures.nameTable.get(macroName);
-        for(int i = indexes.getKey()+1; i < indexes.getValue(); ++i) {
-            String line = DataStructures.definitionTable.get(i);
-            String expandedLine = line;
-            if(line.contains("?")) {
-                int indexOfNumber = line.indexOf("?") + 1;
-                int indexOfArgument = line.charAt(indexOfNumber) - '0';
-                expandedLine = line.replaceAll("\\?\\w", DataStructures.argumentTable[indexOfArgument - 1]);
+
+        for(definitionTableIndex = indexes.getKey()+1; definitionTableIndex < indexes.getValue();) {
+            getLine();
+            processLine();
+            String expandedLine = currentLine;
+            if(currentLine.contains("?")) {
+                int indexOfNumber = currentLine.indexOf("?") + 1;
+                int indexOfArgument = currentLine.charAt(indexOfNumber) - '0';
+                expandedLine = currentLine.replaceAll("\\?\\w", DataStructures.argumentTable[indexOfArgument - 1]);
             }
-            if(i == indexes.getKey()+1) {
+            if(definitionTableIndex == indexes.getKey()+1) {
                 if(!label.isEmpty()) {
                     expandedProgram.add(String.format("%-14s%-14s", label, expandedLine));
                     continue;

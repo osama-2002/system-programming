@@ -1,7 +1,6 @@
 import javafx.util.Pair;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -25,10 +24,10 @@ public class MacroProcessor {
             this.inputFile = new File(fileName);
             this.reader = new Scanner(inputFile);
             this.writer = new FileWriter("processor_output.txt");
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
-        System.out.println("---MACROPROCESSOR DATA STRUCTURES---");
+        System.out.println("---MACRO PROCESSOR DATA STRUCTURES---");
     }
 
     public void process() {
@@ -39,10 +38,34 @@ public class MacroProcessor {
                 processLine();
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("An error occurred: " + e.getMessage());
         } finally {
             reader.close();
         }
+    }
+
+    public void showResult() {
+        System.out.println("\nName Table: ");
+        DataStructures.showNameTable();
+        System.out.println("\nDefinition Table: ");
+        DataStructures.showDefinitionTable();
+        try {
+            for(String line : expandedProgram) writer.write(line + "\n");
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            System.out.println("An error occurred: " + e.getMessage());
+        }
+    }
+
+    private void getLine() {
+        if(expanding) { //get next line from the Definition Table
+            currentLine = DataStructures.definitionTable.get(definitionTableIndex);
+            definitionTableIndex++;
+        } else { //get next line from the input file
+            currentLine = reader.nextLine().trim();
+        }
+        currentLineTokens = currentLine.split("\\s+");
     }
 
     private void processLine() {
@@ -54,7 +77,7 @@ public class MacroProcessor {
         }
         if(DataStructures.nameTable.containsKey(opCode)) expand();
         else if(opCode.equals("MACRO")) define();
-        else {
+        else { // add the line to the expanded file
             if(expanding) return;
             if(opCode.equals(currentLineTokens[0]) && currentLineTokens.length > 1) {
                 currentLine = String.format("%-14s%-18s%-14s", "", currentLineTokens[0], currentLineTokens[1]);
@@ -63,22 +86,12 @@ public class MacroProcessor {
         }
     }
 
-    private void getLine() {
-        if(expanding) {
-            currentLine = DataStructures.definitionTable.get(definitionTableIndex);
-            definitionTableIndex++;
-        } else {
-            currentLine = reader.nextLine().trim();
-        }
-        currentLineTokens = currentLine.split("\\s+");
-    }
-
     private void define() {
         int level = 1;
         macroName = currentLineTokens[0];
         DataStructures.nameTable.put(macroName, new Pair<>(0, 0));
         currentLine = String.format("%-18s%-14s", currentLineTokens[0], currentLineTokens[2]);
-        DataStructures.definitionTable.add(currentLine);
+        DataStructures.definitionTable.add(currentLine); //add macro prototype to the Definition Table
         String[] arguments = currentLineTokens[2].split(",");
         String argument = "";
         while(level > 0) {
@@ -132,6 +145,7 @@ public class MacroProcessor {
             macroName = currentLineTokens[0];
             expandedProgram.add("." + currentLine);
         }
+
         expanding = true;
         DataStructures.argumentTable = argument.split(",");
         Pair<Integer, Integer> indexes = DataStructures.nameTable.get(macroName);
@@ -145,7 +159,7 @@ public class MacroProcessor {
                 int indexOfArgument = currentLine.charAt(indexOfNumber) - '0';
                 expandedLine = currentLine.replaceAll("\\?\\w", DataStructures.argumentTable[indexOfArgument - 1]);
             }
-            if(definitionTableIndex == indexes.getKey()+1) {
+            if(definitionTableIndex-1 == indexes.getKey()+1) {
                 if(!label.isEmpty()) {
                     expandedProgram.add(String.format("%-14s%-14s", label, expandedLine));
                     continue;
@@ -154,19 +168,5 @@ public class MacroProcessor {
             expandedProgram.add(String.format("%-14s", "") + expandedLine);
         }
         expanding = false;
-    }
-
-    public void showResult() {
-        System.out.println("\nName Table: ");
-        DataStructures.showNameTable();
-        System.out.println("\nDefinition Table: ");
-        DataStructures.showDefinitionTable();
-        try {
-            for(String line : expandedProgram) writer.write(line + "\n");
-            writer.flush();
-            writer.close();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 }

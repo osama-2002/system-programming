@@ -1,19 +1,22 @@
 import javafx.util.Pair;
-
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.FileWriter;
 
 public class DataStructures {
+    // Assembler Data Structures:
     static HashMap<String, String> operationTable = new HashMap<>();
     static HashMap<String, String> ASCIITable = new HashMap<>();
     static HashMap<String, Integer> symbolTable = new HashMap<>();
+    //Macro Processor Data Structures:
     static HashMap<String, Pair<Integer, Integer>> nameTable = new HashMap<>();
     static ArrayList<String> definitionTable = new ArrayList<>();
     static String[] argumentTable;
+    //Loader Data Structures:
     static HashMap<String, Pair<Integer, Integer>> externalSymbolTable = new HashMap<>();
     static HashMap<Integer, Byte> memory = new HashMap<>();
+    //Visualization Functions
     static void showSymbolTable() {
         for(Map.Entry<String, Integer> entry : symbolTable.entrySet()) {
             System.out.printf("%-10s", entry.getKey());
@@ -31,7 +34,12 @@ public class DataStructures {
     }
     static void showExternalSymbolTable() {
         for(Map.Entry<String, Pair<Integer, Integer>> entry : externalSymbolTable.entrySet()) {
-            System.out.printf("%-10s%-10s%-10s", entry.getKey(), Integer.toHexString(entry.getValue().getKey()).toUpperCase(), Integer.toHexString(entry.getValue().getValue()).toUpperCase());
+            System.out.printf(
+                    "%-10s%-10s%-10s",
+                    entry.getKey(),
+                    Integer.toHexString(entry.getValue().getKey()).toUpperCase(),
+                    Integer.toHexString(entry.getValue().getValue()).equals("0") ? "" : Integer.toHexString(entry.getValue().getValue()).toUpperCase()
+            );
             System.out.println();
         }
     }
@@ -59,7 +67,7 @@ public class DataStructures {
             throw new RuntimeException(e);
         }
     }
-    static {
+    static { //initialization of the Operation Table
         operationTable.put("ADD", "18");
         operationTable.put("ADDF", "58");
         operationTable.put("ADDR", "90");
@@ -120,7 +128,7 @@ public class DataStructures {
         operationTable.put("TIXR", "B8");
         operationTable.put("WD", "DC");
     }
-    static {
+    static { //initialization of the ASCII Table
         ASCIITable.put("NUL", "00");
         ASCIITable.put(" ", "00");
         ASCIITable.put("SOH", "01");

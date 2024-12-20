@@ -1,7 +1,6 @@
 import javafx.util.Pair;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Scanner;
 
 public class Loader {
@@ -18,18 +17,17 @@ public class Loader {
             this.reader = new Scanner(inputFile);
             this.writer = new FileWriter("loader_output.txt");
             this.startingAddress = startingAddress;
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
-        System.out.println("---LOADER DATA STRUCTURES---");
     }
 
     public void passOne() {
         String currentLine;
         String[] currentLineTokens;
+        String controlSectionName;
         int controlSectionAddress = startingAddress;
         int controlSectionLength = 0;
-        String controlSectionName;
 
         try {
             while(reader.hasNext()) {
@@ -39,7 +37,7 @@ public class Loader {
                     controlSectionName = currentLineTokens[1];
                     controlSectionLength = Integer.parseInt(currentLineTokens[3], 16);
                     if(DataStructures.externalSymbolTable.containsKey(controlSectionName)) {
-                        throw new Exception("Duplicate External Symbol: " + controlSectionName);
+                        throw new Exception("\n*ERROR* Duplicate External Symbol: \"" + controlSectionName + "\"");
                     } else {
                         DataStructures.externalSymbolTable.put(controlSectionName, new Pair<>(controlSectionAddress, controlSectionLength));
                     }
@@ -50,7 +48,7 @@ public class Loader {
                         symbolName = currentLineTokens[i];
                         symbolAddress = Integer.parseInt(currentLineTokens[i+1], 16);
                         if(DataStructures.externalSymbolTable.containsKey(symbolName)) {
-                            throw new Exception("Duplicate External Symbol: " + symbolName);
+                            throw new Exception("\n*ERROR* Duplicate External Symbol: \"" + symbolName + "\"");
                         } else {
                             DataStructures.externalSymbolTable.put(symbolName, new Pair<>(controlSectionAddress + symbolAddress, 0));
                         }
@@ -60,14 +58,10 @@ public class Loader {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("An error occurred: " + e.getMessage());
         } finally {
             reader.close();
         }
-        System.out.println("\nExternal Symbol Table:");
-        System.out.printf("%-10s%-10s%-10s", "Name", "Address", "Length");
-        System.out.println();
-        DataStructures.showExternalSymbolTable();
     }
 
     public void passTwo() {
@@ -78,6 +72,7 @@ public class Loader {
         int recordStartingAddress;
         int recordLength;
         StringBuilder recordObjectCodes;
+
         try {
             reader = new Scanner(inputFile);
             while(reader.hasNext()) {
@@ -94,48 +89,54 @@ public class Loader {
                         int halfBytesValue = Integer.parseInt(recordObjectCodes.substring(i, i+2), 16);
                         DataStructures.memory.put(recordStartingAddress+(i/2), (byte)halfBytesValue);
                     }
-                }
-                else if (currentLine.startsWith("M")) {
+                } else if (currentLine.startsWith("M")) {
                     int address = controlSectionAddress + Integer.parseInt(currentLineTokens[1], 16);
                     int halfBytesNumber = Integer.parseInt(currentLineTokens[2]);
                     String symbol = currentLineTokens[3].substring(1);
                     boolean isAddition = currentLineTokens[3].startsWith("+");
 
                     int value = 0;
-                    for (int i = 0; i < 3; i++) {
+                    for (int i = 0; i < 3; i++) { //get 3 bytes from memory and store them in "value"
                         value = (value << 8) | (DataStructures.memory.containsKey(address + i) ? DataStructures.memory.get(address + i) & 0xFF : 0);
                     }
 
                     if (DataStructures.externalSymbolTable.containsKey(symbol)) {
                         int symbolAddress = DataStructures.externalSymbolTable.get(symbol).getKey();
-                        if (isAddition) {
+                        if (isAddition) { //modify the address
                             value += symbolAddress;
                         } else {
                             value -= symbolAddress;
                         }
-
-                        for (int i = 2; i >= 0; i--) {
-                            if (i == 0 && halfBytesNumber % 2 != 0) {
+                        for (int i = 2; i >= 0; i--) { //write back the 3 bytes to memory
+                            if (i == 0 && halfBytesNumber % 2 != 0) { //modify half byte only
                                 int originalValue = DataStructures.memory.getOrDefault(address, (byte)0) & 0xFF;
                                 DataStructures.memory.put(address, (byte)((originalValue & 0xF0) | (value & 0x0F)));
-                            } else {
+                            } else { //modify whole byte
                                 DataStructures.memory.put(address + i, (byte)(value & 0xFF));
                             }
                             value >>= 8;
                         }
                     } else {
-                        throw new RuntimeException("Undefined External Symbol: " + symbol);
+                        throw new Exception("\n*ERROR* Undefined External Symbol: \"" + symbol + "\"");
                     }
                 } else if(currentLine.startsWith("E")) {
                     controlSectionAddress += controlSectionLength;
                 }
             }
-            DataStructures.showMemory(startingAddress, writer);
-            System.out.println();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("An error occurred: " + e.getMessage());
         } finally {
             reader.close();
         }
+    }
+
+    public void showResult() {
+        System.out.println("---LOADER DATA STRUCTURES---");
+        System.out.println("\nExternal Symbol Table:");
+        System.out.printf("%-10s%-10s%-10s", "Name", "Address", "Length");
+        System.out.println();
+        DataStructures.showExternalSymbolTable();
+        DataStructures.showMemory(startingAddress, writer);
+        System.out.println();
     }
 }

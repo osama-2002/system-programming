@@ -27,6 +27,7 @@ public class MacroProcessor {
         } catch (IOException e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
+        System.out.println("---MACROPROCESSOR DATA STRUCTURES---");
     }
 
     public void process() {
@@ -147,7 +148,7 @@ public class MacroProcessor {
     }
 
     public void showResult() {
-        System.out.println("Name Table: ");
+        System.out.println("\nName Table: ");
         DataStructures.showNameTable();
         System.out.println("\nDefinition Table: ");
         DataStructures.showDefinitionTable();

@@ -1,4 +1,6 @@
 import javafx.util.Pair;
+
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,8 @@ public class DataStructures {
     static HashMap<String, Pair<Integer, Integer>> nameTable = new HashMap<>();
     static ArrayList<String> definitionTable = new ArrayList<>();
     static String[] argumentTable;
+    static HashMap<String, Pair<Integer, Integer>> externalSymbolTable = new HashMap<>();
+    static HashMap<Integer, Byte> memory = new HashMap<>();
     static void showSymbolTable() {
         for(Map.Entry<String, Integer> entry : symbolTable.entrySet()) {
             System.out.printf("%-10s", entry.getKey());
@@ -24,6 +28,36 @@ public class DataStructures {
     }
     static void showDefinitionTable() {
         for(String line : definitionTable) System.out.println(line);
+    }
+    static void showExternalSymbolTable() {
+        for(Map.Entry<String, Pair<Integer, Integer>> entry : externalSymbolTable.entrySet()) {
+            System.out.printf("%-10s%-10s%-10s", entry.getKey(), Integer.toHexString(entry.getValue().getKey()).toUpperCase(), Integer.toHexString(entry.getValue().getValue()).toUpperCase());
+            System.out.println();
+        }
+    }
+    static void showMemory(int programAddress, FileWriter writer) {
+        try {
+            writer.write("Memory Address                       Contents\n\n");
+            for (int i = programAddress; i <= programAddress + 0x150; i += 0x10) {
+                writer.write(String.format("     %04X         |     ", i));
+                for (int j = 0; j < 0x10; j += 4) {
+                    for (int k = 0; k < 4; k++) {
+                        int address = i + j + k;
+                        if (memory.containsKey(address)) {
+                            writer.write(String.format("%02X", memory.get(address)));
+                        } else {
+                            writer.write("xx");
+                        }
+                    }
+                    writer.write(" ");
+                }
+                writer.write("\n");
+            }
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     static {
         operationTable.put("ADD", "18");

@@ -27,6 +27,7 @@ public class Assembler {
         } catch (IOException e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
+        System.out.println("---ASSEMBLER DATA STRUCTURES---\n");
     }
 
     public void passOne() {
@@ -85,13 +86,10 @@ public class Assembler {
         } finally {
             reader.close();
         }
-        programLength = locationCounter - startingAddress;
-        System.out.println("Program Name: " + programName);
-        System.out.println("Starting Address: " + Integer.toHexString(startingAddress).toUpperCase());
-        System.out.println("Program Length: " + Integer.toHexString(programLength).toUpperCase());
-        System.out.println("\nSymbol Table:\n");
+        System.out.println("Symbol Table:");
         System.out.println("Symbol" + "\t  " + "Location");
         DataStructures.showSymbolTable();
+        System.out.println();
     }
 
     public void passTwo() {
